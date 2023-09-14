@@ -1,7 +1,7 @@
 #include "shell.h"
 
 /**
- * split_words - Split a line into words
+ * tokenize - Split a line into words
  *
  * @line: Line to spli
  * @sep: Delimiters for split the words
@@ -53,7 +53,7 @@ char **tokenize(char *line, const char *sep)
 }
 
 /**
- * join_words - Join 3 words with a separator
+ * join_tokens - Join 3 words with a separator
  * Description: Result -> w1.sep.w2.sep.nl
  * @word1: Word1 to join
  * @word2: Word2 to join

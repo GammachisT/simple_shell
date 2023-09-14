@@ -1,7 +1,7 @@
 #include "shell.h"
 
 /**
- * message_selector - Select the message that match with the error_code
+ * msg_match - Select the message that match with the error_code
  *
  * @info: General information about the shell
  *

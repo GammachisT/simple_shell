@@ -1,7 +1,7 @@
 #include "shell.h"
 
 /**
- * bin_env - Implementation for the env builtin
+ * shell_env - Implementation for the env builtin
  *
  * @info: General information about the shell
  * @arguments: Command
@@ -113,7 +113,7 @@ char *find_dir(char *filename, shell_t *info)
 }
 
 /**
- * current_path -	Check the order of the path
+ * current_path - Check the order of the path
  *
  * @path: PATH to check
  * @info: General infor about the shell

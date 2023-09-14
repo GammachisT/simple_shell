@@ -38,7 +38,7 @@ char *read_prompt()
 }
 
 /**
- * start_prompt - Loop reading text
+ * get_prompt - Loop reading text
  *
  * @info: Struct of general information
  *
@@ -87,7 +87,7 @@ void get_prompt(shell_t *info)
 }
 
 /**
- * sigintHandler - Handler for SIGINT
+ * sigHandler - Handler for SIGINT
  *
  * @sig_num: Unused parameter
  **/

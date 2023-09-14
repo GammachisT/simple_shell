@@ -1,7 +1,7 @@
 #include "shell.h"
 
 /**
- * is_executable - Check if a filename have permissions
+ * executable - Check if a filename have permissions
  * for run
  *
  * @filename: Filename to check

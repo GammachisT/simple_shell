@@ -1,13 +1,14 @@
 #include "shell.h"
 
 /**
- * bin_exit - Implementation of the exit builtin
+ * shell_exit - Implementation of the exit builtin
  * Description: Free all the memory used and
  * exit with the last status_code
  *
  * @info: Information about the shell
  * @arguments: Arguments received
  **/
+
 void shell_exit(shell_t *info, char **arguments)
 {
 	int status_code, status;
