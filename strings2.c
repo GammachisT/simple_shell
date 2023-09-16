@@ -1,114 +1,111 @@
 #include "shell.h"
 
 /**
- * digits - Cout the numbe of digits of a number
- *
- * @n: Number
- *
- * Return: Digits
- **/
-int digits(int n)
+ * _strdup - duplicates a str in the heap memory.
+ * @s: Type char pointer str
+ * Return: duplicated str
+ */
+char *_strdup(const char *s)
 {
-	int i;
+	char *new;
+	size_t len;
 
-	for (i = 0; n != 0; i++, n /= 10)
-		;
-
-	return (i);
+	len = _strlen(s);
+	new = malloc(sizeof(char) * (len + 1));
+	if (new == NULL)
+		return (NULL);
+	_memcpy(new, s, len + 1);
+	return (new);
 }
 
 /**
- * to_string - Conver @number to string
- *
- * @number: Number to convert
- *
- * Return: Number as string
- **/
-char *to_string(int number)
+ * _strlen - Returns the lenght of a string.
+ * @s: Type char pointer
+ * Return: Always 0.
+ */
+int _strlen(const char *s)
 {
-	int n_digits, i;
-	char *_number;
+	int len;
 
-	n_digits = digits(number);
-	_number = malloc(n_digits * sizeof(char) + 2);
-	if (number == 0)
+	for (len = 0; s[len] != 0; len++)
 	{
-		_number[0] = '0';
-		_number[1] = '\0';
-		return (_number);
 	}
-	/* Check NULL */
-
-	_number[n_digits] = '\0';
-	for (i = n_digits - 1; number != 0; number /= 10, i--)
-		_number[i] = (number % 10) + '0';
-
-	return (_number);
-}
-
-
-/**
- * is_digit - Check if is a digit
- *
- * @n: Number
- *
- * Return: If is a number, return 1 else return 0
- */
-int is_digit(unsigned int n)
-{
-	return (n >= '0' && n <= '9');
+	return (len);
 }
 
 /**
- * _atoi - Convert a string to a number
+ * cmp_chars - compare chars of strings
+ * @str: input string.
+ * @delim: delimiter.
  *
- * @s: String to convert
- *
- * Return: Return the number
+ * Return: 1 if are equals, 0 if not.
  */
-int _atoi(char *s)
+int cmp_chars(char str[], const char *delim)
 {
-	unsigned int number, i;
-	int sign;
+	unsigned int i, j, k;
 
-	sign = 1;
-	number = 0;
-	for (i = 0; s[i] != '\0'; i++)
+	for (i = 0, k = 0; str[i]; i++)
 	{
-		if (is_digit(s[i]))
+		for (j = 0; delim[j]; j++)
 		{
-			number = (s[i] - 48)	+ number * 10;
-
-			if (s[i + 1] == ' ')
+			if (str[i] == delim[j])
+			{
+				k++;
 				break;
+			}
 		}
-		else if (s[i] == '-')
-		{
-			sign *= -1;
-		}
-
 	}
-
-	return (number * sign);
+	if (i == k)
+		return (1);
+	return (0);
 }
 
 /**
- * is_alpha - Search non-digits in a string
+ * _strtok - splits a string by some delimiter.
+ * @str: input string.
+ * @delim: delimiter.
  *
- * @s: String for search
- *
- * Return: If a non-digits was found, return _TRUE
- * if not, return _FALSE
- **/
-int is_alpha(char *s)
+ * Return: string splited.
+ */
+char *_strtok(char str[], const char *delim)
 {
-	int i;
+	static char *splitted, *str_end;
+	char *str_start;
+	unsigned int i, bool;
 
-	for (i = 0; s[i] != '\0'; i++)
+	if (str != NULL)
 	{
-		if (is_digit(s[i]) == _FALSE)
-			return (_TRUE);
+		if (cmp_chars(str, delim))
+			return (NULL);
+		splitted = str; /*Store first address*/
+		i = _strlen(str);
+		str_end = &str[i]; /*Store last address*/
 	}
+	str_start = splitted;
+	if (str_start == str_end) /*Reaching the end*/
+		return (NULL);
 
-	return (_FALSE);
+	for (bool = 0; *splitted; splitted++)
+	{
+		/*Breaking loop finding the next token*/
+		if (splitted != str_start)
+			if (*splitted && *(splitted - 1) == '\0')
+				break;
+		/*Replacing delimiter for null char*/
+		for (i = 0; delim[i]; i++)
+		{
+			if (*splitted == delim[i])
+			{
+				*splitted = '\0';
+				if (splitted == str_start)
+					str_start++;
+				break;
+			}
+		}
+		if (bool == 0 && *splitted) /*Str != Delim*/
+			bool = 1;
+	}
+	if (bool == 0) /*Str == Delim*/
+		return (NULL);
+	return (str_start);
 }

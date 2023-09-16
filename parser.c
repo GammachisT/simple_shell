@@ -1,105 +1,213 @@
 #include "shell.h"
 
 /**
- * tokenize - Split a line into words
+ * swap_chars - swaps | and & for non-printed chars
  *
- * @line: Line to spli
- * @sep: Delimiters for split the words
- *
- * Return: Set of words
- **/
-char **tokenize(char *line, const char *sep)
+ * @input: input string
+ * @bool: type of swap
+ * Return: swapped string
+ */
+
+char *swap_chars(char *input, int bool)
 {
-	char **words, **tmp, *token;
-	size_t new_size, old_size;
+	int i;
 
-	old_size = sizeof(char *);
-	words = malloc(old_size);
-	if (words != NULL)
+	if (bool == 0)
 	{
-		new_size = 1;
-		token = strtok(line, sep);
-		while (token)
+		for (i = 0; input[i]; i++)
 		{
-			if (token[0] == '#')
-				break;
-			tmp = _realloc(words, old_size, (new_size + 1) * sizeof(char *));
-			old_size = (new_size + 1) * sizeof(char *);
-			if (tmp == NULL)
-				break;
-
-			words = tmp;
-			++new_size;
-
-			words[new_size - 2] = malloc(_strlen(token) + 1);
-			if (words == NULL)
+			if (input[i] == '|')
 			{
-				free(words);
-				free(tmp);
+				if (input[i + 1] != '|')
+					input[i] = 16;
+				else
+					i++;
 			}
 
-			if (words[new_size - 2] != NULL)
-				_strcpy(words[new_size - 2], token);
-
-			token = strtok(NULL, sep);
-
-			tmp = NULL;
+			if (input[i] == '&')
+			{
+				if (input[i + 1] != '&')
+					input[i] = 12;
+				else
+					i++;
+			}
 		}
-
-		words[new_size - 1] = NULL;
 	}
-
-	return (words);
+	else
+	{
+		for (i = 0; input[i]; i++)
+		{
+			input[i] = (input[i] == 16 ? '|' : input[i]);
+			input[i] = (input[i] == 12 ? '&' : input[i]);
+		}
+	}
+	return (input);
 }
 
 /**
- * join_tokens - Join 3 words with a separator
- * Description: Result -> w1.sep.w2.sep.nl
- * @word1: Word1 to join
- * @word2: Word2 to join
- * @word3: Word3 to join
- * @sep: Separator between the words
+ * add_nodes - add separators and command lines in the lists
  *
- * Return: Line composed by 3 parts followed by a separator and
- * end by a new line
- **/
-char *join_tokens(char *word1, char *word2, char *word3, const char *sep)
+ * @head_s: head of separator list
+ * @head_l: head of command lines list
+ * @input: input string
+ * Return: no return
+ */
+void add_nodes(sep_list **head_s, line_list **head_l, char *input)
 {
-	char *aux;
-	int size_str1, size_str2, size_str3, size_sep;
+	int i;
+	char *line;
 
-	size_str1 = size_str2 = size_sep = 0;
+	input = swap_chars(input, 0);
 
-	if (word1 != NULL)
-		size_str1 = _strlen(word1);
-	else
-		word1 = "";
+	for (i = 0; input[i]; i++)
+	{
+		if (input[i] == ';')
+			add_sep_node_end(head_s, input[i]);
 
-	if (word2 != NULL)
-		size_str2 = _strlen(word2);
-	else
-		word2 = "";
+		if (input[i] == '|' || input[i] == '&')
+		{
+			add_sep_node_end(head_s, input[i]);
+			i++;
+		}
+	}
 
-	if (word3 != NULL)
-		size_str3 = _strlen(word3);
-	else
-		word3 = "";
+	line = _strtok(input, ";|&");
+	do {
+		line = swap_chars(line, 1);
+		add_line_node_end(head_l, line);
+		line = _strtok(NULL, ";|&");
+	} while (line != NULL);
 
-	if (sep != NULL)
-		size_sep = _strlen((char *)sep);
-	else
-		sep = "";
+}
 
-	aux = malloc(size_str1 + size_str2 + size_sep + size_str3 + size_sep + 2);
-	if (aux == NULL)
-		return (NULL);
+/**
+ * go_next_cmd - go to the next command line stored
+ *
+ * @list_s: separator list
+ * @list_l: command line list
+ * @info: info about the shell
+ * Return: no return
+ */
+void go_next_cmd(sep_list **list_s, line_list **list_l, shell_t *info)
+{
+	int loop_sep;
+	sep_list *ls_s;
+	line_list *ls_l;
 
-	aux = _strcpy(aux, word1);
-	aux = _strcat(aux, (char *)sep);
-	aux = _strcat(aux, word2);
-	aux = _strcat(aux, (char *)sep);
-	aux = _strcat(aux, word3);
-	aux = _strcat(aux, "\n");
+	loop_sep = 1;
+	ls_s = *list_s;
+	ls_l = *list_l;
 
-	return (aux);
+	while (ls_s != NULL && loop_sep)
+	{
+		if (info->status == 0)
+		{
+			if (ls_s->separator == '&' || ls_s->separator == ';')
+				loop_sep = 0;
+			if (ls_s->separator == '|')
+				ls_l = ls_l->next, ls_s = ls_s->next;
+		}
+		else
+		{
+			if (ls_s->separator == '|' || ls_s->separator == ';')
+				loop_sep = 0;
+			if (ls_s->separator == '&')
+				ls_l = ls_l->next, ls_s = ls_s->next;
+		}
+		if (ls_s != NULL && !loop_sep)
+			ls_s = ls_s->next;
+	}
+
+	*list_s = ls_s;
+	*list_l = ls_l;
+}
+
+/**
+ * tokenize - splits command lines according to
+ * the separators ;, | and &, and executes them
+ *
+ * @info: info about the shell data
+ * @input: input string
+ * Return: 0 to exit, 1 to continue
+ */
+int tokenize(shell_t *info, char *input)
+{
+
+	sep_list *head_s, *list_s;
+	line_list *head_l, *list_l;
+	int loop;
+
+	head_s = NULL;
+	head_l = NULL;
+
+	add_nodes(&head_s, &head_l, input);
+
+	list_s = head_s;
+	list_l = head_l;
+
+	while (list_l != NULL)
+	{
+		info->input = list_l->line;
+		info->args = split_line(info->input);
+		loop = exec_cmd(info);
+		free(info->args);
+
+		if (loop == 0)
+			break;
+
+		go_next_cmd(&list_s, &list_l, info);
+
+		if (list_l != NULL)
+			list_l = list_l->next;
+	}
+
+	free_sep_list(&head_s);
+	free_line_list(&head_l);
+
+	if (loop == 0)
+		return (0);
+	return (1);
+}
+
+/**
+ * split_line - tokenizes the input string
+ *
+ * @input: input string.
+ * Return: string splitted.
+ */
+char **split_line(char *input)
+{
+	size_t bsize;
+	size_t i;
+	char **tokens;
+	char *token;
+
+	bsize = TOK_BUFSIZE;
+	tokens = malloc(sizeof(char *) * (bsize));
+	if (tokens == NULL)
+	{
+		write(STDERR_FILENO, ": allocation error\n", 18);
+		exit(EXIT_FAILURE);
+	}
+
+	token = _strtok(input, TOK_DELIM);
+	tokens[0] = token;
+
+	for (i = 1; token != NULL; i++)
+	{
+		if (i == bsize)
+		{
+			bsize += TOK_BUFSIZE;
+			tokens = _reallocdp(tokens, i, sizeof(char *) * bsize);
+			if (tokens == NULL)
+			{
+				write(STDERR_FILENO, ": allocation error\n", 18);
+				exit(EXIT_FAILURE);
+			}
+		}
+		token = _strtok(NULL, TOK_DELIM);
+		tokens[i] = token;
+	}
+
+	return (tokens);
 }

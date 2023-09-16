@@ -1,35 +1,73 @@
 #include "shell.h"
 
 /**
- * main - Entry Point
- * @argc: number of arguments received
- * @argv: arguments received
- * Return: 0
- **/
-
-int main(int argc, char **argv)
+ * set_data - Initialize data structure
+ *
+ * @info: info about the shell
+ * @av: argument vector
+ * Return: no return
+ */
+void set_data(shell_t *info, char **av)
 {
-	shell_t *info;
-	int status_code;
+	unsigned int i;
 
-	info = malloc(sizeof(shell_t));
-	if (info == NULL)
+	info->av = av;
+	info->input = NULL;
+	info->args = NULL;
+	info->status = 0;
+	info->counter = 1;
+
+	for (i = 0; environ[i]; i++)
+		;
+
+	info->_environ = malloc(sizeof(char *) * (i + 1));
+
+	for (i = 0; environ[i]; i++)
 	{
-		perror(argv[0]);
-		exit(1);
+		info->_environ[i] = _strdup(environ[i]);
 	}
 
-	info->pid = getpid();
-	info->status_code = 0;
-	info->n_commands = 0;
-	info->argc = argc;
-	info->argv = argv;
-	info->mode = isatty(STDIN) == INTERACTIVE;
-	start(info);
+	info->_environ[i] = NULL;
+	info->pid = aux_itoa(getpid());
+}
 
-	status_code = info->status_code;
+/**
+ * free_data - frees data structure
+ *
+ * @info: information about the shell
+ * Return: no return
+ */
+void free_data(shell_t *info)
+{
+	unsigned int i;
 
-	free(info);
+	for (i = 0; info->_environ[i]; i++)
+	{
+		free(info->_environ[i]);
+	}
 
-	return (status_code);
+	free(info->_environ);
+	free(info->pid);
+}
+
+/**
+ * main - Entry point
+ *
+ * @ac: argument count
+ * @av: argument vector
+ *
+ * Return: 0 on success.
+ */
+int main(int ac, char **av)
+{
+	shell_t info;
+	(void) ac;
+
+	signal(SIGINT, get_sigint);
+	set_data(&info, av);
+	shell_loop(&info);
+	free_data(&info);
+	if (info.status < 0)
+		return (255);
+	return (info.status);
 }

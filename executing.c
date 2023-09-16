@@ -1,66 +1,23 @@
 #include "shell.h"
 
 /**
- * execute - Execute a command in other process
+ * exec_cmd - finds builtins and commands
  *
- * @command: Command to execute
- * @arguments: Arguments of the @command
- * @info: General info about the shell
- * @buff: Line readed
- **/
-void execute(char *command, char **arguments, shell_t *info, char *buff)
+ * @info: info about shell (args)
+ * Return: 1 on success.
+ */
+
+int exec_cmd(shell_t *info)
 {
-	int status;
-	pid_t pid;
+	int (*builtin)(shell_t *info);
 
-	pid = fork();
-	if (pid == 0)
-	{
-		execve(command, arguments, environ);
-		perror("./sh");
+	if (info->args[0] == NULL)
+		return (1);
 
-		free_memory_pp((void *) arguments);
+	builtin = get_builtin(info->args[0]);
 
-		if (info->utility_path != NULL)
-		{
-			free(info->utility_path);
-			info->utility_path = NULL;
-		}
+	if (builtin != NULL)
+		return (builtin(info));
 
-		free(info);
-		free(buff);
-		exit(1);
-	}
-	else if (pid > 0)
-	{
-		waitpid(pid, &status, 0);
-		if (WIFEXITED(status))
-			info->status_code = WEXITSTATUS(status);
-	}
-}
-
-
-/**
- * current_directory - Execute the command if the order require
- *
- * @cmd: Command to execute
- * @arguments: Arguments of the @cmd
- * @buff: Line readed
- * @info: General info about the shell
- *
- * Return: Status of the operations
- **/
-int current_directory(char *cmd, char **arguments, char *buff, shell_t *info)
-{
-
-	if (info->current_path == _FALSE)
-		return (_FALSE);
-
-	if (executable(cmd) == PERMISSIONS)
-	{
-		execute(cmd, arguments, info, buff);
-		return (_TRUE);
-	}
-
-	return (_FALSE);
+	return (cmd_exec(info));
 }
