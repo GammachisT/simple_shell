@@ -16,8 +16,10 @@
 #define TOK_BUFSIZE 128
 #define TOK_DELIM " \t\r\n\a"
 
-/* Points to an array of pointers to strings called the "environment" */
+/* environment, program name & history counter */
 extern char **environ;
+char *name;
+int hist;
 
 typedef struct data
 {
@@ -28,6 +30,7 @@ typedef struct data
 	int counter;			/* lines counter */
 	char **_environ;		/* environment variable */
 	char *pid;			/* process ID of the shell */
+	int readfd;
 } shell_t;
 
 /* struct sep_list_s - single linked list */
@@ -60,6 +63,22 @@ typedef struct builtin_s
 	int (*f)(shell_t *info);
 } builtin_t;
 
+typedef struct alias_s
+{
+	char *name;
+	char *value;
+	struct alias_s *next;
+} alias_t;
+
+typedef struct  bulltin
+{
+	char *command;
+	int (*fun)(char **line, int er);
+} bul_t;
+
+/* alias linked list*/
+alias_t *aliases;
+
 /* lists.c */
 sep_list *add_sep_node_end(sep_list **head, char sep);
 void free_sep_list(sep_list **head);
@@ -80,6 +99,7 @@ int _strspn(char *s, char *accept);
 /* memory.c */
 void _memcpy(void *newptr, const void *ptr, unsigned int size);
 void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+void free_args(char **args, char **front);
 char **_reallocdp(char **ptr, unsigned int old_size, unsigned int new_size);
 
 /* strings2.c */
@@ -162,9 +182,6 @@ int get_len(int n);
 char *aux_itoa(int n);
 int _atoi(char *s);
 
-/* get_error.c */
-int get_error(shell_t *info, int eval);
-
 /* errors.c */
 char *strcat_cderror(shell_t *, char *, char *, char *);
 char *get_cd_error(shell_t *info);
@@ -192,8 +209,19 @@ void set_data(shell_t *info, char **av);
 void free_data(shell_t *info);
 int main(int ac, char **av);
 
+/* get_error.c */
+int get_error(shell_t *info, int eval);
 char *error_get_alias(char **args);
 char *error_syntax(char **args);
 char *error_permission(char **args);
+
+/* alias.c */
+int shell_alias(char **args, char __attribute__((__unused__)) **front);
+void set_alias(char *var_name, char *value);
+void print_alias(alias_t *alias);
+
+/* alias_linkedlist.c*/
+alias_t *add_alias_end(alias_t **head, char *name, char *value);
+void free_alias_list(alias_t *head);
 
 #endif

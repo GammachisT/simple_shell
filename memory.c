@@ -89,3 +89,18 @@ char **_reallocdp(char **ptr, unsigned int old_size, unsigned int new_size)
 
 	return (newptr);
 }
+
+/**
+ * free_args - Frees up memory taken by args.
+ * @args: A double pointer containing commands/arguments.
+ * @front: A double pointer to the beginning of args.
+ */
+void free_args(char **args, char **front)
+{
+	size_t i;
+
+	for (i = 0; args[i] || args[i + 1]; i++)
+		free(args[i]);
+
+	free(front);
+}
